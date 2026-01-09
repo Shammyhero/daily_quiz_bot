@@ -1,0 +1,352 @@
+[
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "Given table `users` with a nullable column `email`. Query: `SELECT COUNT(email) FROM users;` vs `SELECT COUNT(*) FROM users;`. How do the results differ?",
+    "canonical_answer": "COUNT(email) counts only non-NULL values in the email column. COUNT(*) counts every row regardless of NULLs.",
+    "explanation": "Aggregate functions like COUNT(col) ignore NULLs, whereas COUNT(*) counts rows."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "You have two tables A and B with identical data (3 rows each). `SELECT * FROM A UNION SELECT * FROM B` returns how many rows?",
+    "canonical_answer": "It returns 3 rows (assuming distinct rows).",
+    "explanation": "UNION removes duplicates. Use UNION ALL to keep duplicates (which would return 6 rows)."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "In a SELECT statement, which clause executes first: WHERE or GROUP BY?",
+    "canonical_answer": "WHERE executes before GROUP BY.",
+    "explanation": "SQL Order of Execution: FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "Query: `SELECT * FROM orders WHERE status = NULL;`. Why returns this zero rows even if there are NULL statuses?",
+    "canonical_answer": "NULL cannot be compared using '='. You must use 'IS NULL'.",
+    "explanation": "NULL represents 'unknown'. Unknown = Unknown is false/unknown. usage: `WHERE status IS NULL`."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "What is the difference between `DELETE FROM table` and `TRUNCATE TABLE table` regarding transaction logs?",
+    "canonical_answer": "DELETE is a DML operation that logs each row deletion (slower, rollbackable). TRUNCATE is DDL (often) that deallocates pages (faster, harder/impossible to rollback in some DBs).",
+    "explanation": "TRUNCATE resets high water marks and identity seeds usually; DELETE does not."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "If you `LEFT JOIN` Table A (10 rows) with Table B (5 rows) and there are no matches, how many rows result?",
+    "canonical_answer": "10 rows.",
+    "explanation": "A LEFT JOIN returns all rows from the left table, with NULLs for columns from the right table where no match is found."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "Does `DISTINCT` apply to the first column listed or the entire row combination?",
+    "canonical_answer": "It applies to the entire unique combination of selected columns.",
+    "explanation": "`SELECT DISTINCT a, b` returns unique pairs of (a, b), not just unique a's."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "Query: `SELECT * FROM employees WHERE name LIKE 'A_';`. What does this match?",
+    "canonical_answer": "Matches any 2-letter name starting with 'A'.",
+    "explanation": "`%` matches any sequence of characters; `_` matches exactly one character."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "When filtering aggregated data (e.g. 'show departments with > 10 employees'), which clause must you use?",
+    "canonical_answer": "HAVING.",
+    "explanation": "WHERE filters rows before aggregation. HAVING filters groups after aggregation."
+  },
+  {
+    "track": "sql",
+    "difficulty": "easy",
+    "question_text": "What does `BETWEEN 10 AND 20` include? 10? 20?",
+    "canonical_answer": "Yes, BETWEEN is inclusive of both bounds in standard SQL.",
+    "explanation": "It is equivalent to `value >= 10 AND value <= 20`."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "Query: `SELECT * FROM A WHERE id NOT IN (SELECT id FROM B);`. If B contains a NULL value in `id`, what is the result?",
+    "canonical_answer": "Zero rows (Empty set).",
+    "explanation": "If the subquery returns ANY NULL, `NOT IN` evaluates to Unknown for all rows, resulting in no matches. Use `NOT EXISTS` to avoid this."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "You `CROSS JOIN` a table of 10 rows with a table of 100 rows. How many rows in the output?",
+    "canonical_answer": "1000 rows.",
+    "explanation": "CROSS JOIN produces a Cartesian product: RowCount_A * RowCount_B."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "What is the difference between `RANK()` and `DENSE_RANK()` regarding ties?",
+    "canonical_answer": "RANK() skips numbers after ties (1, 1, 3). DENSE_RANK() does not skip (1, 1, 2).",
+    "explanation": "Use DENSE_RANK when you want consecutive ranking values despite ties."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "Filter logic: `SELECT * FROM A LEFT JOIN B ON A.id = B.id AND B.val = 5`. vs `... WHERE B.val = 5`. How do they differ?",
+    "canonical_answer": "In the ON clause, filtering happens BEFORE joining (rows from A are kept even if B.val!=5, B cols become NULL). In WHERE, it filters AFTER joining (removing A rows where B.val!=5 or is NULL).",
+    "explanation": "Putting filters on the right table in the WHERE clause effectively turns a LEFT JOIN into an INNER JOIN."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "`SELECT COALESCE(null, null, 5, 10)` returns what?",
+    "canonical_answer": "5.",
+    "explanation": "COALESCE returns the first non-null value in the list."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "You have an aggregation `SUM(salary)`. If the table is empty, does it return 0 or NULL?",
+    "canonical_answer": "NULL.",
+    "explanation": "Summing an empty set returns NULL, not 0. `COUNT` is the exception (returns 0)."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "Why might `SELECT * FROM users WHERE YEAR(created_at) = 2023` be slow even with an index on `created_at`?",
+    "canonical_answer": "Wrapping a column in a function (`YEAR()`) creates a 'non-SARGable' query, preventing index usage.",
+    "explanation": "The database must scan every row to compute the function. Better: `created_at >= '2023-01-01' AND created_at < '2024-01-01'`."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "What happens if you group by a primary key column but select a non-aggregated column that isn't in the group by clause (in standard SQL mode)?",
+    "canonical_answer": "Error (or indeterminate behavior in loose MySQL modes).",
+    "explanation": "Standard SQL requires all non-aggregated columns in the SELECT list to be present in the GROUP BY clause."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "Explain the concept of a 'Self Join'. When would you use it?",
+    "canonical_answer": "Joining a table to itself. Used for hierarchical data (e.g., Employees table with ManagerID) or comparing rows within the same table.",
+    "explanation": "You must alias the table (e.g., `FROM emp e1 JOIN emp e2`) to distinguish the instances."
+  },
+  {
+    "track": "sql",
+    "difficulty": "medium",
+    "question_text": "In a `CASE` statement, does the database evaluate all conditions or stop at the first match?",
+    "canonical_answer": "It stops at the first match (Short-circuit evaluation).",
+    "explanation": "If `WHEN condition1` is true, subsequent conditions are ignored."
+  },
+  {
+    "track": "sql",
+    "difficulty": "hard",
+    "question_text": "Can `ROW_NUMBER()` return different results for the same data if run twice? Why?",
+    "canonical_answer": "Yes, if the `ORDER BY` clause inside `OVER()` is not fully deterministic (has ties without a tie-breaker).",
+    "explanation": "Always include a unique column (like ID) in the window sort to ensure stability: `ORDER BY score DESC, id ASC`."
+  },
+  {
+    "track": "sql",
+    "difficulty": "hard",
+    "question_text": "What is the 'Phantom Read' phenomenon in database isolation levels?",
+    "canonical_answer": "When a transaction reads a set of rows, and a concurrent transaction inserts/deletes rows that match the filter, causing the first transaction to see a different set of rows upon re-reading.",
+    "explanation": "Occurs in isolation levels lower than SERIALIZABLE (like REPEATABLE READ in some implementations)."
+  },
+  {
+    "track": "sql",
+    "difficulty": "hard",
+    "question_text": "Why is `COUNT(DISTINCT col)` often much slower than `COUNT(col)`?",
+    "canonical_answer": "It requires sorting or hashing the values to find uniqueness before counting, which is memory and CPU intensive.",
+    "explanation": "Simple COUNT just iterates. COUNT(DISTINCT) requires a distinct pass or hash table."
+  },
+  {
+    "track": "sql",
+    "difficulty": "hard",
+    "question_text": "In a Correlated Subquery, how many times is the inner query executed?",
+    "canonical_answer": "Once for every row processed by the outer query.",
+    "explanation": "This makes correlated subqueries potentially very slow (O(N^2)) compared to joins or non-correlated subqueries."
+  },
+  {
+    "track": "sql",
+    "difficulty": "hard",
+    "question_text": "You need to store a tree structure in SQL. What is the 'Recursive CTE' approach?",
+    "canonical_answer": "Using a Common Table Expression that references itself to traverse parent-child relationships iteratively.",
+    "explanation": "Requires an anchor member (base case) and a recursive member joined by UNION ALL."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "Why is `def func(a=[]):` dangerous in Python?",
+    "canonical_answer": "The default list `[]` is created only once at definition time. Subsequent calls mutate the SAME list.",
+    "explanation": "Always use `def func(a=None):` and initialize inside the function."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "Difference between `is` and `==`?",
+    "canonical_answer": "`is` checks identity (memory address); `==` checks value equality.",
+    "explanation": "`a = [1]; b = [1]`. `a == b` is True. `a is b` is False."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "How do you copy a list `a` so that modifying the copy doesn't affect `a` (shallow copy)?",
+    "canonical_answer": "`b = a[:]` or `b = list(a)` or `b = a.copy()`.",
+    "explanation": "`b = a` just copies the reference/pointer, not the data."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "Pandas: What is the difference between `df.loc[]` and `df.iloc[]`?",
+    "canonical_answer": "`loc` selects by label/index name. `iloc` selects by integer position (0-based).",
+    "explanation": "If your index is integers 10, 20, 30... `loc[0]` fails, `iloc[0]` gets the first row."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "What happens if you modify a list while iterating over it with `for item in my_list:`?",
+    "canonical_answer": "Unexpected behavior (skipping elements) or runtime errors.",
+    "explanation": "The iterator maintains an internal index which gets out of sync when elements shift. Iterate over a copy instead: `for item in my_list[:]`."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "In a dictionary, can you use a list as a key? `my_dict = {[1, 2]: 'val'}`?",
+    "canonical_answer": "No, lists are mutable and unhashable.",
+    "explanation": "Keys must be immutable (hashable). Use a tuple `(1, 2)` instead."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "True or False: `bool([])` evaluates to?",
+    "canonical_answer": "False.",
+    "explanation": "Empty collections (lists, dicts, strings, tuples) are Falsy in Python."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "Pandas: How do you handle missing values by filling them with 0?",
+    "canonical_answer": "`df.fillna(0, inplace=True)` or `df = df.fillna(0)`.",
+    "explanation": "Note that many Pandas operations are not inplace by default."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "What does the `*args` syntax do in a function definition?",
+    "canonical_answer": "Collects variable positional arguments into a tuple.",
+    "explanation": "`def func(*args):` allows calling `func(1, 2, 3)`. args becomes `(1, 2, 3)`."
+  },
+  {
+    "track": "python",
+    "difficulty": "easy",
+    "question_text": "What is the result of `10 // 3` in Python 3?",
+    "canonical_answer": "3.",
+    "explanation": "`//` is the floor division operator. `/` would return 3.333..."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "Pandas: What is the `SettingWithCopyWarning` trying to warn you about?",
+    "canonical_answer": "You are modifying a slice of a DataFrame that might be a copy, not the original view, so changes might be lost.",
+    "explanation": "Often happens with chained indexing `df[mask]['col'] = 5`. Use `df.loc[mask, 'col'] = 5`."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "Why is `df.apply(lambda x: ...)` generally slower than vectorized operations?",
+    "canonical_answer": "`apply` loops through rows in Python space, losing the C-speed benefits of NumPy/Pandas vectorization.",
+    "explanation": "Always prefer native methods (e.g., `df['a'] + df['b']`) over apply."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "Does `np.nan == np.nan` evaluate to True or False?",
+    "canonical_answer": "False.",
+    "explanation": "By definition (IEEE 754), NaN is not equal to anything, including itself. Use `np.isnan()` or `pd.isna()`."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "When using `groupby` in Pandas, what kind of object is returned before aggregation?",
+    "canonical_answer": "A `DataFrameGroupBy` object (lazy evaluation).",
+    "explanation": "It doesn't compute anything until you call `.sum()`, `.mean()`, etc. You can iterate over it to see groups."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "What happens if you try to iterate over a generator twice?",
+    "canonical_answer": "The second iteration yields nothing (it is exhausted).",
+    "explanation": "Generators are one-time use streams. You must recreate it or convert to a list to use twice."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "What is the difference between `list.append(x)` and `list.extend(x)`?",
+    "canonical_answer": "`append` adds the element `x` to the end (nested if x is list). `extend` unpacks `x` and adds its elements.",
+    "explanation": "`a=[1]; a.append([2]) -> [1, [2]]`. `a.extend([2]) -> [1, 2]`."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "In a Pandas merge, what is the difference between `how='inner'` and `how='outer'`?",
+    "canonical_answer": "Inner keeps only keys in BOTH DataFrames. Outer keeps keys in EITHER, filling missing sides with NaN.",
+    "explanation": "Equivalent to SQL INNER JOIN and FULL OUTER JOIN."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "Why use a Context Manager (`with open(...)`) for file handling?",
+    "canonical_answer": "It ensures the file is closed automatically even if an exception occurs inside the block.",
+    "explanation": "It handles resource setup and teardown (the `__exit__` method)."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "What does `zip(list_a, list_b)` do if the lists have different lengths?",
+    "canonical_answer": "It truncates to the length of the shortest list.",
+    "explanation": "Data from the longer list is ignored. Use `itertools.zip_longest` to keep all."
+  },
+  {
+    "track": "python",
+    "difficulty": "medium",
+    "question_text": "What is the Global Interpreter Lock (GIL) impact on CPU-bound Python threads?",
+    "canonical_answer": "It prevents multiple native threads from executing Python bytecodes at once, effectively limiting CPU-bound programs to a single core.",
+    "explanation": "For CPU parallelism in Python, use `multiprocessing` instead of `threading`."
+  },
+  {
+    "track": "python",
+    "difficulty": "hard",
+    "question_text": "Pandas Memory: Why is converting string columns to 'category' dtype recommended for low-cardinality data?",
+    "canonical_answer": "Strings use Python objects (pointers + overhead). Categories use integers mapped to a small lookup table, saving massive RAM.",
+    "explanation": "Can reduce memory usage by 90%+ for repeated string values."
+  },
+  {
+    "track": "python",
+    "difficulty": "hard",
+    "question_text": "Explain 'Late Binding' in Python closures (e.g., loops defining lambdas).",
+    "canonical_answer": "Closures look up variables at call time, not definition time. If defined in a loop, all lambdas might see the final value of the loop variable.",
+    "explanation": "Fix: `lambda x=i: ...` to capture the value at definition time."
+  },
+  {
+    "track": "python",
+    "difficulty": "hard",
+    "question_text": "What is the difference between `__new__` and `__init__` in a Python class?",
+    "canonical_answer": "`__new__` creates/returns the instance (static method). `__init__` initializes attributes of the already created instance.",
+    "explanation": "You rarely override `__new__` unless subclassing immutable types (like str, tuple) or implementing Singletons."
+  },
+  {
+    "track": "python",
+    "difficulty": "hard",
+    "question_text": "In NumPy/Pandas, what are Broadcasting Rules?",
+    "canonical_answer": "Rules that allow arithmetic between arrays of different shapes by virtually stretching the smaller array to match the larger one.",
+    "explanation": "Compatible if dimensions are equal or one of them is 1. Allows `array + 5` or `matrix + row_vector`."
+  },
+  {
+    "track": "python",
+    "difficulty": "hard",
+    "question_text": "What is the 'leaky abstraction' regarding Python's `asyncio` loop and blocking calls?",
+    "canonical_answer": "If you call a synchronous blocking function (like `time.sleep` or heavy CPU work) inside an async function, it blocks the ENTIRE event loop.",
+    "explanation": "Async only works if the code yields (awaits). Blocking code halts all other coroutines. Use `run_in_executor` for blocking tasks."
+  }
+]

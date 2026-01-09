@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables (Critical security!)
+.env
+
+# Database
+*.db
+*.sqlite3
+data/questions.db
+
+# Logs
+*.log
+
+# OS specific
+.DS_Store
