@@ -4,9 +4,11 @@ import json
 from dataclasses import dataclass
 from typing import List, Optional
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'questions.db')
+DB_PATH = os.getenv('DB_PATH', os.path.join(os.path.dirname(__file__), 'data', 'questions.db'))
 
 def get_connection():
+    # Ensure the directory exists (crucial for cloud volumes)
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     return sqlite3.connect(DB_PATH)
 
 def init_db():
