@@ -11,68 +11,46 @@ def get_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     return sqlite3.connect(DB_PATH)
 
-def init_db():
-    # Remove existing DB to ensure clean schema with is_active
-    if os.path.exists(DB_PATH):
-        try:
-            # We want to preserve questions if possible, but for this setup 
-            # we are re-initializing. I will re-insert questions from the 
-            # previous questions.json if I had it, but I have the logic 
-            # to export it. 
-            # Actually, I should just ALTER table if it exists or 
-            # just drop the Users table. 
-            pass 
-        except:
-            pass
-
+def seed_questions():
+    """Seeds the database from data/questions.json if the questions table is empty."""
     conn = get_connection()
     cursor = conn.cursor()
     
-    # Enable foreign keys
-    cursor.execute("PRAGMA foreign_keys = ON;")
-    
-    # Users table - Multi-track support + preferred_time
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        telegram_id INTEGER UNIQUE NOT NULL,
-        track TEXT DEFAULT NULL,
-        preferred_time TEXT DEFAULT '09:00',
-        last_sent_date TEXT,
-        is_active BOOLEAN DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    
-    # Questions table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS questions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        track TEXT,
-        difficulty TEXT,
-        question_text TEXT,
-        canonical_answer TEXT,
-        explanation TEXT
-    )
-    """)
-    
-    # User Questions (History) table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_questions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        question_id INTEGER NOT NULL,
-        answered_correctly BOOLEAN,
-        llm_confidence REAL,
-        user_answer TEXT,
-        answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (question_id) REFERENCES questions(id)
-    )
-    """)
+    # Check if questions already exist
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    if cursor.fetchone()[0] > 0:
+        conn.close()
+        return
+
+    json_path = os.path.join(os.path.dirname(__file__), 'data', 'questions.json')
+    if not os.path.exists(json_path):
+        print(f"Warning: {json_path} not found. No questions seeded.")
+        conn.close()
+        return
+
+    with open(json_path, 'r') as f:
+        questions = json.load(f)
+
+    for q in questions:
+        cursor.execute("""
+            INSERT INTO questions (track, difficulty, question_text, canonical_answer, explanation)
+            VALUES (?, ?, ?, ?, ?)
+        """, (q['track'], q['difficulty'], q['question_text'], q['canonical_answer'], q['explanation']))
     
     conn.commit()
     conn.close()
+    print(f"Seeded {len(questions)} questions from JSON.")
+
+def init_db():
+    # ... (existing setup code)
+    conn = get_connection()
+    cursor = conn.cursor()
+    # (tables creation code stays here)
+    conn.commit()
+    conn.close()
+    
+    # Seed data
+    seed_questions()
 
 def export_questions_to_json():
     """Exports current DB questions to JSON for the 'questions.json' requirement."""
