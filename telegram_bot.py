@@ -22,6 +22,7 @@ async def post_init(application):
         BotCommand("start", "Start/Restart & Settings"),
         BotCommand("track", "Change tracks"),
         BotCommand("stats", "Check progress & streak"),
+        BotCommand("users", "Check total users (Admin)"),
         BotCommand("help", "Get help"),
         BotCommand("stop", "Pause daily quizzes")
     ]
@@ -283,6 +284,10 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode='Markdown')
 
+async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    count = user_service.get_total_users_count()
+    await update.message.reply_text(f"👥 **Total Registered Users:** {count}")
+
 async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_service.set_active_status(user_id, False)
@@ -311,6 +316,7 @@ def create_app():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("track", start)) # Reuse start for track selection
     app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("users", users_command))
     app.add_handler(CommandHandler("stop", stop_command))
     app.add_handler(CommandHandler("help", help_command))
     

@@ -121,3 +121,11 @@ class UserService:
             row_list[5] = bool(row_list[5]) # is_active is now at index 5
             users.append(User(*row_list))
         return users
+
+    def get_total_users_count(self) -> int:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
