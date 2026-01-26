@@ -41,6 +41,33 @@ def seed_questions():
     conn.close()
     print(f"Seeded {len(questions)} questions from JSON.")
 
+def update_existing_questions():
+    """Updates existing questions in the DB with the content from questions.json (to apply formatting fixes)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    json_path = os.path.join(os.path.dirname(__file__), 'data', 'questions.json')
+    if not os.path.exists(json_path):
+        conn.close()
+        return
+
+    with open(json_path, 'r') as f:
+        questions = json.load(f)
+
+    # We assume questions are indexed 1..N based on their order in JSON.
+    # This is a safe assumption if seeded sequentially and never deleted.
+    for index, q in enumerate(questions):
+        question_id = index + 1
+        cursor.execute("""
+            UPDATE questions 
+            SET question_text = ?, canonical_answer = ?, explanation = ?
+            WHERE id = ?
+        """, (q['question_text'], q['canonical_answer'], q['explanation'], question_id))
+    
+    conn.commit()
+    conn.close()
+    print("Updated question text/formatting for existing questions.")
+
 def init_db():
     # ... (existing setup code)
     conn = get_connection()
@@ -51,6 +78,9 @@ def init_db():
     
     # Seed data
     seed_questions()
+    
+    # Update formatting for existing questions
+    update_existing_questions()
 
 def export_questions_to_json():
     """Exports current DB questions to JSON for the 'questions.json' requirement."""

@@ -12,6 +12,11 @@ Compare the USER ANSWER against the CANONICAL ANSWER.
 - If correct: Provide detailed, encouraging feedback (3-4 sentences) that explains the concept deeper or adds interesting context.
 - If incorrect: Provide short feedback (max 2 sentences) guiding them to the right track.
 
+IMPORTANT:
+- When including code snippets, variable names, or SQL keywords in your text, use `single backticks` for inline code.
+- For multi-line code examples, use triple backticks (```) to create a code block. 
+- DO NOT use language identifiers (like ```sql) after the backticks, as the rendering engine does not support them. Just use ```.
+
 You MUST return a JSON object with the following fields:
 1. "is_correct": boolean
 2. "confidence": float (0.0 to 1.0) - how sure you are that the user understands the concept.
@@ -22,7 +27,7 @@ Example Output:
 {
   "is_correct": true,
   "confidence": 0.95,
-  "short_feedback": "Spot on! You correctly identified the difference between UNION and UNION ALL. UNION ALL is generally faster because it doesn't incur the overhead of sorting to remove duplicates, which is a key performance consideration in large datasets.",
+  "short_feedback": "Spot on! You correctly identified the difference between `UNION` and `UNION ALL`. `UNION ALL` is generally faster because it doesn't incur the overhead of sorting to remove duplicates.",
   "hint": null
 }
 """
@@ -47,14 +52,16 @@ class LLMEvaluator:
         CANONICAL ANSWER: {canonical_answer}
         
         Provide a SHORT, helpful hint (max 1 sentence) that guides them towards the solution 
-        without giving it away explicitly.
+        without giving it away explicitly. 
+        Use `backticks` for any code keywords or variables.
         """
         
         try:
             response = await self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.7
+                temperature=0.7,
+                timeout=30.0
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
@@ -82,7 +89,8 @@ class LLMEvaluator:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.0,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
+                timeout=30.0
             )
             
             content = response.choices[0].message.content
