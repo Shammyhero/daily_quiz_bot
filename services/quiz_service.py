@@ -10,7 +10,10 @@ class QuizService:
         # Load formatted questions into memory for runtime text swapping
         self.format_map = {}
         try:
-            json_path = os.path.join(os.path.dirname(__file__), '../data', 'questions.json')
+            # Use Current Working Directory (Project Root) + data/questions.json
+            # This is safer for Railway/Docker environments where main.py runs from root
+            json_path = os.path.join(os.getcwd(), 'data', 'questions.json')
+            
             if os.path.exists(json_path):
                 with open(json_path, 'r') as f:
                     data = json.load(f)
@@ -19,6 +22,10 @@ class QuizService:
                         # Value: The beautifully formatted text from JSON
                         norm_key = self._normalize(q['question_text'])
                         self.format_map[norm_key] = q['question_text']
+                print(f"SUCCESS: Loaded {len(self.format_map)} formatted questions for text swapping.")
+            else:
+                print(f"WARNING: questions.json not found at {json_path}")
+                
         except Exception as e:
             print(f"Warning: Could not load questions.json for formatting: {e}")
 
