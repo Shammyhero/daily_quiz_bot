@@ -1,8 +1,45 @@
+import json
+import os
+import re
 from typing import Optional
 from db import get_connection
 from models import Question
 
 class QuizService:
+    def __init__(self):
+        # Load formatted questions into memory for runtime text swapping
+        self.format_map = {}
+        try:
+            json_path = os.path.join(os.path.dirname(__file__), '../data', 'questions.json')
+            if os.path.exists(json_path):
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
+                    for q in data:
+                        # Key: Normalized text (no backticks, lower, collapsed spaces)
+                        # Value: The beautifully formatted text from JSON
+                        norm_key = self._normalize(q['question_text'])
+                        self.format_map[norm_key] = q['question_text']
+        except Exception as e:
+            print(f"Warning: Could not load questions.json for formatting: {e}")
+
+    def _normalize(self, text):
+        """Standardizes text for matching: lower case, no backticks, single spaces."""
+        if not text: return ""
+        text = text.replace('`', '')
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text.lower()
+
+    def _apply_formatting(self, question: Question) -> Question:
+        """Swaps the DB text with the formatted JSON text if a match is found."""
+        if not question: return None
+        
+        # Try to find a better formatted version of the question text
+        key = self._normalize(question.question_text)
+        if key in self.format_map:
+            question.question_text = self.format_map[key]
+            
+        return question
+
     def get_next_question_for_user(self, user_id: int, track: str) -> Optional[Question]:
         conn = get_connection()
         cursor = conn.cursor()
@@ -24,7 +61,7 @@ class QuizService:
         conn.close()
         
         if row:
-            return Question(*row)
+            return self._apply_formatting(Question(*row))
         return None
 
     def get_question_by_id(self, question_id: int) -> Optional[Question]:
@@ -35,7 +72,7 @@ class QuizService:
         conn.close()
         
         if row:
-            return Question(*row)
+            return self._apply_formatting(Question(*row))
         return None
 
     def record_answer(self, user_id: int, question_id: int, user_answer: str, is_correct: bool, confidence: float):
@@ -70,17 +107,15 @@ class QuizService:
         rows = cursor.fetchall()
         conn.close()
         
-        def normalize(text):
-            # Remove common markdown characters that might be in DB but not in message.text (or vice versa)
-            return text.replace('*', '').replace('_', '').replace('`', '').strip()
-
-        norm_message = normalize(message_text)
+        # We need to normalize the message text the same way
+        norm_message = self._normalize(message_text)
         
         for row in rows:
             q = Question(*row)
-            norm_question = normalize(q.question_text)
+            # Normalize the DB question text
+            norm_question = self._normalize(q.question_text)
             
             # Check if normalized question text is in normalized message text
             if norm_question in norm_message:
-                return q
+                return self._apply_formatting(q)
         return None
